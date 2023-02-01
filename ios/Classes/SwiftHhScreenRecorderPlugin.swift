@@ -1,11 +1,14 @@
 import Flutter
 import UIKit
 import ReplayKit
+import Photos
 
 
 public class SwiftHhScreenRecorderPlugin: NSObject, FlutterPlugin, RPPreviewViewControllerDelegate {
   
     var flutterRes : FlutterResult?
+    var outputURL = ""
+   
     
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "hh_screen_recorder", binaryMessenger: registrar.messenger())
@@ -13,7 +16,20 @@ public class SwiftHhScreenRecorderPlugin: NSObject, FlutterPlugin, RPPreviewView
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 
+  func tempURL() -> URL? {
+    let directory = NSTemporaryDirectory() as NSString
+        
+    if directory != "" {
+        let path = directory.appendingPathComponent(NSUUID().uuidString + ".mp4")
+        return URL(fileURLWithPath: path)
+    } 
+    return nil
+}
+
+
+
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+   
 
     flutterRes = result
       
@@ -32,36 +48,30 @@ public class SwiftHhScreenRecorderPlugin: NSObject, FlutterPlugin, RPPreviewView
         }
         
     }
-    else if (call.method == "stopRecording")
-    {
-        print("HHRecorder: Attempting to stop recording & show preview window")
-
-        RPScreenRecorder.shared().stopRecording { preview, err in
-          guard let preview = preview else {
-              print("HHRecorder: Error stopping recording: no preview window!");
-              result(false)
-              return
-          }
-            
-            if let err = err {
-                print("HHRecorder: Error stopping recording: \(err.localizedDescription)")
-                result(false)
-                return
+    else if call.method == "stopRecording" {
+      RPScreenRecorder.shared().stopRecording { (preview, error) in
+        if let error = error {
+          result(FlutterError(code: "ERROR", message: error.localizedDescription, details: nil))
+          return
+        }
+        let fetchOptions = PHFetchOptions()
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        let fetchResult = PHAsset.fetchAssets(with: .video, options: fetchOptions)
+        if let lastAsset = fetchResult.firstObject {
+          let options = PHVideoRequestOptions()
+          options.isNetworkAccessAllowed = true
+          PHImageManager.default().requestAVAsset(forVideo: lastAsset, options: options) { (avAsset, _, _) in
+            if let avAsset = avAsset as? AVURLAsset {
+              result(avAsset.url.path)
+            } else {
+              result(FlutterError(code: "ERROR", message: "Unable to retrieve file path", details: nil))
             }
-
-            if UIDevice.current.userInterfaceIdiom == .pad {
-            preview.modalPresentationStyle = .popover
-            preview.popoverPresentationController?.sourceRect = .zero
-            preview.popoverPresentationController?.sourceView =
-                UIApplication.shared.delegate?.window??.rootViewController?.view
-        }else {
-          preview.modalPresentationStyle = .overFullScreen
+          }
+        } else {
+          result(FlutterError(code: "ERROR", message: "No screen recording found", details: nil))
         }
-          preview.previewControllerDelegate = self
-            UIApplication.shared.delegate?.window??.rootViewController?.present(preview, animated: true)
-        }
-        
-    }
+      }
+    } 
     else if (call.method == "pauseRecording") 
     {
         result(false)
@@ -78,7 +88,11 @@ public class SwiftHhScreenRecorderPlugin: NSObject, FlutterPlugin, RPPreviewView
     {
         // iOS 9.0+ is always supported on HH
         result(true)
-    }
+    } else if (call.method == "getScreenRecordingDirectory")
+{
+    let screenRecordingDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    result(screenRecordingDirectory.path)
+}
     else
     {
         result(false)
@@ -89,7 +103,7 @@ public class SwiftHhScreenRecorderPlugin: NSObject, FlutterPlugin, RPPreviewView
   public func previewControllerDidFinish(_ previewController: RPPreviewViewController) {
       
       UIApplication.shared.delegate?.window??.rootViewController?.dismiss(animated: true)
-      flutterRes?(true)
+      // flutterRes?(self.outputURL)
       print("HHRecorder: Stopped recording")
 
     }

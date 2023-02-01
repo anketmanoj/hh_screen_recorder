@@ -18,6 +18,12 @@
 	<string>hh_screen_recorder_example</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Enable camera usage to record AR videos, record videos as backgrounds for the video editor, select profile picture, select your profile cover image</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Enable microphone usage to record Ar videos and record videos as backgrounds for the video editor</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Enable Photo Library usage to upload pictures/videos to be used in the Video Editor, select videos as backgrounds for the video editor, select profile picture, select your profile cover image</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>

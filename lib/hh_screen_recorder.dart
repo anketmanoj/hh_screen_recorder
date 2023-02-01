@@ -46,49 +46,52 @@ class HhScreenRecorder {
 
   Future<bool> startRecording(
       {required String filename, String? foldername, bool? recordAudio}) async {
-     try{
-        var response = await _channel.invokeMethod('startRecording', {
-          "filename": filename,
-          "foldername": foldername,
-          "recordAudio": recordAudio
-        });
-        return response;
-    }
-    on Exception catch(ex)
-    {
+    try {
+      var response = await _channel.invokeMethod('startRecording', {
+        "filename": filename,
+        "foldername": foldername,
+        "recordAudio": recordAudio
+      });
+      return response;
+    } on Exception catch (ex) {
       throw Exception(ex.toString());
     }
   }
 
-  Future<bool> stopRecording() async {
-     try{
-       var response = await _channel.invokeMethod('stopRecording');
-      return response;
+  Future<String> stopRecording() async {
+    try {
+      var response = await _channel.invokeMethod('stopRecording');
+      print("RESPONSE ### ${response}");
+      return "$response";
+    } on Exception catch (ex) {
+      throw Exception(ex.toString());
     }
-    on Exception catch(ex)
-    {
+  }
+
+  Future<String> getFilePath() async {
+    try {
+      var response = await _channel.invokeMethod('getScreenRecordingDirectory');
+      print("response :::: $response");
+      return response;
+    } on Exception catch (ex) {
       throw Exception(ex.toString());
     }
   }
 
   Future<bool> pauseRecording() async {
-     try{
+    try {
       var response = await _channel.invokeMethod('pauseRecording');
       return response;
-    }
-    on Exception catch(ex)
-    {
+    } on Exception catch (ex) {
       throw Exception(ex.toString());
     }
   }
 
   Future<bool> resumeRecording() async {
-    try{
+    try {
       var response = await _channel.invokeMethod('resumeRecording');
       return response;
-    }
-    on Exception catch(ex)
-    {
+    } on Exception catch (ex) {
       throw Exception(ex.toString());
     }
   }
@@ -97,12 +100,10 @@ class HhScreenRecorder {
   // Do not let the user pause if so.
   // iOS Replay Kit does not support this at all atm.
   Future<bool> isPauseResumeEnabled() async {
-    try{
+    try {
       var response = await _channel.invokeMethod('isPauseResumeEnabled');
       return response;
-    }
-    on Exception catch(ex)
-    {
+    } on Exception catch (ex) {
       throw Exception(ex.toString());
     }
   }
@@ -111,11 +112,10 @@ class HhScreenRecorder {
   // Whether h264 encoder & MP4 file format is supported or not.
   // True for all iOS & macOS devices HH supports.
   Future<bool> isRecordingSupported() async {
-    try{
+    try {
       var response = await _channel.invokeMethod('isRecordingSupported');
       return response;
-    }
-    on Exception catch (ex) {
+    } on Exception catch (ex) {
       throw Exception(ex.toString());
     }
   }
